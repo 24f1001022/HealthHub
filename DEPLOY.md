@@ -25,7 +25,7 @@ Or delete the Blueprint and create a new one from the repo.
 
 | Variable | Required | Example |
 |----------|----------|---------|
-| `REDIS_URL` | Recommended | Upstash URL — sessions + export status |
+| `REDIS_URL` | Recommended | Upstash **Redis URL** (`rediss://...`) — **not** the REST `https://` URL |
 | `PUBLIC_BASE_URL` | Yes | `https://healthhub-api.onrender.com` |
 | `FRONTEND_URL` | Yes | Your Vercel URL (no trailing `/`) |
 | `MAIL_USERNAME` | Yes | Gmail address |
@@ -34,7 +34,11 @@ Or delete the Blueprint and create a new one from the repo.
 
 4. Test: `https://YOUR-API.onrender.com/api/departments` → JSON response
 
-**Without `REDIS_URL`:** app still runs using filesystem sessions (login works; set Upstash for best results).
+**Upstash Redis URL (correct):** In [Upstash console](https://console.upstash.com) → your database → copy **Redis URL** (looks like `rediss://default:xxxxx@xxxxx.upstash.io:6379`). Paste as `REDIS_URL` on Render.
+
+**Wrong:** `UPSTASH_REDIS_REST_URL` / `https://xxx.upstash.io` — that is HTTP REST, not for this app.
+
+**Without valid `REDIS_URL`:** app still deploys using filesystem sessions.
 
 **Admin:** `admin@admin.com` / `admin`
 

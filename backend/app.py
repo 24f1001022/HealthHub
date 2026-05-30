@@ -13,16 +13,31 @@ _cors_origins = list({_frontend, 'http://localhost:5173', 'http://127.0.0.1:5173
 CORS(app, supports_credentials=True, origins=_cors_origins)
 mail = Mail(app)
 
-if app.config.get('USE_REDIS'):
+def _setup_cache_and_redis():
+    """Use Redis only when REDIS_URL is a valid redis:// or rediss:// URL."""
+    if not app.config.get('USE_REDIS'):
+        app.redis = None
+        return Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
+
     from redis import Redis
-    app.redis = Redis.from_url(app.config['REDIS_URL'])
-    cache = Cache(app, config={
-        'CACHE_TYPE': 'RedisCache',
-        'CACHE_REDIS_URL': app.config['REDIS_URL'],
-    })
-else:
-    app.redis = None
-    cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
+    url = app.config['REDIS_URL']
+    try:
+        client = Redis.from_url(url)
+        client.ping()
+        app.redis = client
+        return Cache(app, config={
+            'CACHE_TYPE': 'RedisCache',
+            'CACHE_REDIS_URL': url,
+        })
+    except Exception as exc:
+        print(f'WARNING: Redis unavailable ({exc}); using filesystem sessions.')
+        app.config['USE_REDIS'] = False
+        app.config['SESSION_TYPE'] = 'filesystem'
+        app.redis = None
+        return Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
+
+
+cache = _setup_cache_and_redis()
 
 Session(app)
 

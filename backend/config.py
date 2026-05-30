@@ -26,8 +26,23 @@ USE_CELERY = os.getenv('USE_CELERY', 'false').lower() == 'true'
 # Cron endpoints (daily/monthly emails via cron-job.org)
 CRON_SECRET = os.getenv('CRON_SECRET', '')
 
-# Redis + Session (optional — falls back to filesystem if REDIS_URL unset)
-REDIS_URL = os.getenv('REDIS_URL', '').strip()
+# Redis + Session — must be redis:// or rediss:// (NOT the Upstash REST https URL)
+def _valid_redis_url(url: str) -> bool:
+    if not url:
+        return False
+    return url.startswith(('redis://', 'rediss://', 'unix://'))
+
+
+def _pick_redis_url() -> str:
+    # Upstash dashboard labels: "Redis URL" → use that, not "REST URL"
+    for key in ('REDIS_URL', 'UPSTASH_REDIS_URL'):
+        raw = os.getenv(key, '').strip().strip('"').strip("'")
+        if _valid_redis_url(raw):
+            return raw
+    return ''
+
+
+REDIS_URL = _pick_redis_url()
 USE_REDIS = bool(REDIS_URL)
 
 SESSION_PERMANENT  = True
