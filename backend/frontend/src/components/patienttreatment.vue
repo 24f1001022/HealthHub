@@ -145,6 +145,16 @@ export default {
       this.$router.push("/login");
     },
 
+    downloadExportFile(filepath) {
+      const filename = filepath.split(/[/\\]/).pop();
+      const link = document.createElement("a");
+      link.href = `${apiOrigin}/exports/${filename}`;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+
     async exportcsv() {
       const id = this.$route.params.id;
       this.exporting = true;
@@ -158,7 +168,13 @@ export default {
 
         const taskId = res.data.task_id;
 
-        // Step 2: poll task status
+        if (res.data.status === "finished" && res.data.filepath) {
+          this.downloadExportFile(res.data.filepath);
+          this.exporting = false;
+          return;
+        }
+
+        // Step 2: poll task status (Celery mode)
         const poll = async () => {
           try {
             const statusRes = await axiosInstance.get(
@@ -167,17 +183,11 @@ export default {
 
             const data = statusRes.data;
 
-            if (data.status === "finished" && data.filepath) { 
+            if (data.status === "finished" && data.filepath) {
               clearInterval(this.pollInterval);
               this.pollInterval = null;
+              this.downloadExportFile(data.filepath);
               this.exporting = false;
-              const filename = data.filepath.split(/[/\\]/).pop();
-              const link = document.createElement("a");
-              link.href = `${apiOrigin}/exports/${filename}`;
-              link.download = filename;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
             } else if (data.status === "failed") {
               clearInterval(this.pollInterval);
               this.exporting = false;

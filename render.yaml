@@ -1,6 +1,6 @@
-# Render Blueprint — free tier: web API + Celery worker + beat + Postgres
-# After deploy: set MAIL_* and FRONTEND_URL in the Render dashboard.
-# Redis: create a free database at https://upstash.com and set REDIS_URL on all services.
+# Render Blueprint — FREE tier (web + Postgres only; no background workers)
+# Set REDIS_URL (Upstash free), MAIL_*, PUBLIC_BASE_URL, FRONTEND_URL in the dashboard.
+# Scheduled emails: use cron-job.org → see DEPLOY.md
 
 databases:
   - name: healthhub-db
@@ -15,14 +15,18 @@ services:
     rootDir: backend
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 app:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 app:app
     healthCheckPath: /api/departments
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
       - key: FLASK_ENV
         value: production
+      - key: USE_CELERY
+        value: "false"
       - key: SECRET_KEY
+        generateValue: true
+      - key: CRON_SECRET
         generateValue: true
       - key: DATABASE_URL
         fromDatabase:
@@ -33,76 +37,6 @@ services:
       - key: PUBLIC_BASE_URL
         sync: false
       - key: FRONTEND_URL
-        sync: false
-      - key: MAIL_SERVER
-        value: smtp.gmail.com
-      - key: MAIL_PORT
-        value: "587"
-      - key: MAIL_USE_TLS
-        value: "True"
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
-        sync: false
-
-  - type: worker
-    name: healthhub-celery-worker
-    runtime: python
-    rootDir: backend
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: celery -A celery_app.celery worker --loglevel=info
-    envVars:
-      - key: PYTHON_VERSION
-        value: "3.11.9"
-      - key: FLASK_ENV
-        value: production
-      - key: SECRET_KEY
-        fromService:
-          name: healthhub-api
-          type: web
-          envVarKey: SECRET_KEY
-      - key: DATABASE_URL
-        fromDatabase:
-          name: healthhub-db
-          property: connectionString
-      - key: REDIS_URL
-        sync: false
-      - key: MAIL_SERVER
-        value: smtp.gmail.com
-      - key: MAIL_PORT
-        value: "587"
-      - key: MAIL_USE_TLS
-        value: "True"
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
-        sync: false
-      - key: PUBLIC_BASE_URL
-        sync: false
-
-  - type: worker
-    name: healthhub-celery-beat
-    runtime: python
-    rootDir: backend
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: celery -A celery_app.celery beat --loglevel=info
-    envVars:
-      - key: PYTHON_VERSION
-        value: "3.11.9"
-      - key: FLASK_ENV
-        value: production
-      - key: SECRET_KEY
-        fromService:
-          name: healthhub-api
-          type: web
-          envVarKey: SECRET_KEY
-      - key: DATABASE_URL
-        fromDatabase:
-          name: healthhub-db
-          property: connectionString
-      - key: REDIS_URL
         sync: false
       - key: MAIL_SERVER
         value: smtp.gmail.com

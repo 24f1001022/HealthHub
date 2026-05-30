@@ -1,122 +1,80 @@
 # Deploy HealthHub for free
 
-Stack: **Vercel** (Vue frontend) + **Render** (Flask API, Postgres, Celery) + **Upstash** (Redis) + **Gmail App Password** (email).
+Stack: **Vercel** (frontend) + **Render free web** (API + Postgres) + optional **Upstash Redis** + **Gmail App Password**.
 
-Estimated cost: **$0/month** on free tiers (Render web/workers may sleep when idle).
-
----
-
-## 1. Push this repo to GitHub
-
-Repo: [24f1001022/HealthHub](https://github.com/24f1001022/HealthHub)
-
-```bash
-git add .
-git commit -m "Add production deployment configuration"
-git push origin main
-```
-
-**Security:** If `backend/.env` was ever committed, rotate your Gmail App Password and remove `.env` from Git history (`git rm --cached backend/.env`).
+> **Render free tier does not support Celery background workers.** This project runs emails and CSV export **inside the web service** (`USE_CELERY=false`). Scheduled reminders use [cron-job.org](https://cron-job.org) (free).
 
 ---
 
-## 2. Redis (Upstash — free)
+## Fix a failed Blueprint sync
 
-1. Sign up at [upstash.com](https://upstash.com)
-2. Create a **Redis** database (region near you)
-3. Copy the **Redis URL** (`rediss://...` or `redis://...`)
+If you see `service type is not available for this plan` for Celery workers:
 
-You will paste this as `REDIS_URL` on all Render services.
+1. Pull latest `main` from GitHub (workers removed from `render.yaml`)
+2. In Render → your Blueprint → **Manual sync** → **Clear build cache & deploy**
 
----
-
-## 3. Backend on Render
-
-1. Go to [render.com](https://render.com) → **New** → **Blueprint**
-2. Connect GitHub repo `24f1001022/HealthHub`
-3. Render reads `render.yaml` and creates:
-   - `healthhub-api` (web)
-   - `healthhub-celery-worker`
-   - `healthhub-celery-beat`
-   - `healthhub-db` (Postgres)
-
-4. When prompted, set these **manual** env vars on **all three** Python services:
-
-| Variable | Example |
-|----------|---------|
-| `REDIS_URL` | `rediss://default:xxx@xxx.upstash.io:6379` |
-| `PUBLIC_BASE_URL` | `https://healthhub-api.onrender.com` (your web service URL) |
-| `FRONTEND_URL` | `https://your-app.vercel.app` (after step 4) |
-| `MAIL_USERNAME` | your Gmail address |
-| `MAIL_PASSWORD` | 16-char [Gmail App Password](https://myaccount.google.com/apppasswords) |
-
-5. Deploy and wait until **healthhub-api** is live. Open `https://YOUR-API.onrender.com/api/departments` — you should get `[]` or JSON.
-
-**Gmail:** Turn on 2-Step Verification, then create an App Password. Use that as `MAIL_PASSWORD` (not your normal Gmail password).
-
-**Admin login (seeded on first start):** `admin@admin.com` / `admin`
+Or delete the Blueprint and create a new one from the repo.
 
 ---
 
-## 4. Frontend on Vercel
+## 1. Backend on Render
 
-1. [vercel.com](https://vercel.com) → **Add New Project** → import `HealthHub`
-2. Set **Root Directory** to `backend/frontend`
-3. Framework: **Vite** (auto-detected)
-4. Environment variable:
+1. [render.com](https://render.com) → **New** → **Blueprint** → repo `24f1001022/HealthHub`
+2. Blueprint creates **healthhub-api** (web) + **healthhub-db** (Postgres) only
+3. Set env vars on **healthhub-api**:
 
-| Name | Value |
-|------|--------|
-| `VITE_API_BASE_URL` | `https://YOUR-API.onrender.com/api` |
+| Variable | Required | Example |
+|----------|----------|---------|
+| `REDIS_URL` | Recommended | Upstash URL — sessions + export status |
+| `PUBLIC_BASE_URL` | Yes | `https://healthhub-api.onrender.com` |
+| `FRONTEND_URL` | Yes | Your Vercel URL (no trailing `/`) |
+| `MAIL_USERNAME` | Yes | Gmail address |
+| `MAIL_PASSWORD` | Yes | [Gmail App Password](https://myaccount.google.com/apppasswords) |
+| `CRON_SECRET` | Auto | Copy from Render env (for scheduled emails) |
 
-5. Deploy
+4. Test: `https://YOUR-API.onrender.com/api/departments` → JSON response
 
-6. Copy your Vercel URL (e.g. `https://health-hub-xxx.vercel.app`) and set **`FRONTEND_URL`** on Render `healthhub-api` to that exact URL (no trailing slash). Redeploy the API if needed.
+**Without `REDIS_URL`:** app still runs using filesystem sessions (login works; set Upstash for best results).
 
----
-
-## 5. Verify features
-
-| Feature | How to test |
-|---------|-------------|
-| Login / signup | Register patient → login |
-| Welcome email | Sign up with your email; check spam |
-| Sessions | Login persists after refresh |
-| CSV export | Patient → Treatment → Export CSV (needs worker + email) |
-| Daily reminders | Celery beat (scheduled in `celery_app.py`) |
-| Monthly doctor report | Celery beat on 1st of month |
-
-**Celery worker** must be **Running** on Render for background email and exports. **Beat** runs scheduled reminders/reports.
+**Admin:** `admin@admin.com` / `admin`
 
 ---
 
-## 6. Local development
+## 2. Frontend on Vercel
 
-```bash
-# Terminal 1 — Redis (Docker) or local Redis
-redis-server
+1. Import repo, **Root Directory:** `backend/frontend`
+2. Env: `VITE_API_BASE_URL` = `https://YOUR-API.onrender.com/api`
+3. Deploy → set `FRONTEND_URL` on Render to your Vercel URL → redeploy API
 
-# Terminal 2 — API
-cd backend
-cp .env.example .env   # edit values
-pip install -r requirements.txt
-python app.py
+---
 
-# Terminal 3 — Celery worker
-cd backend
-celery -A celery_app.celery worker --loglevel=info
+## 3. Scheduled emails (free cron)
 
-# Terminal 4 — Frontend
-cd backend/frontend
-npm install
-npm run dev
-```
+On [cron-job.org](https://cron-job.org), create jobs that **POST** to your API:
+
+| Job | URL | Schedule |
+|-----|-----|----------|
+| Daily reminders | `https://YOUR-API.onrender.com/api/cron/daily-reminders` | Daily 8:00 AM |
+| Monthly reports | `https://YOUR-API.onrender.com/api/cron/monthly-reports` | 1st of month |
+
+**Header:** `X-Cron-Secret: <your CRON_SECRET from Render>`
+
+---
+
+## 4. What works on free tier
+
+| Feature | How |
+|---------|-----|
+| Login / signup | Web service |
+| Welcome email | Sent immediately on signup |
+| CSV export | Runs in web request (~few seconds) |
+| Daily / monthly emails | cron-job.org hits `/api/cron/...` |
 
 ---
 
 ## Troubleshooting
 
-- **Login fails after deploy:** `FRONTEND_URL` must match Vercel URL exactly; API must use `FLASK_ENV=production`.
-- **Emails not sent:** Check `MAIL_*`, worker logs, and Gmail App Password.
-- **Export stuck:** Ensure `REDIS_URL` is set on API and worker; worker service must be running.
-- **Render cold start:** Free tier sleeps ~15s on first request after idle.
+- **Blueprint sync failed (workers):** Use latest `render.yaml` (no `type: worker` services).
+- **API deploy failed:** Check Render logs; set `MAIL_*` and `DATABASE_URL` (auto from Postgres).
+- **Login fails:** `FRONTEND_URL` must exactly match Vercel URL; `FLASK_ENV=production`.
+- **Cold start:** First request after idle may take ~30s on Render free.

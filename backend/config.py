@@ -20,16 +20,27 @@ MAIL_USE_TLS  = os.getenv('MAIL_USE_TLS',  'True').lower() == 'true'
 MAIL_USERNAME = os.getenv('MAIL_USERNAME')
 MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
 
-# Redis + Session
-REDIS_URL           = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
-SESSION_TYPE        = os.getenv('SESSION_TYPE', 'redis')
-SESSION_PERMANENT   = True
-SESSION_USE_SIGNER  = False
-SESSION_KEY_PREFIX  = os.getenv('SESSION_KEY_PREFIX', 'flask_session:')
+# Celery (disabled on Render free — no background workers)
+USE_CELERY = os.getenv('USE_CELERY', 'false').lower() == 'true'
 
-# Cache
-CACHE_TYPE      = 'RedisCache'
-CACHE_REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+# Cron endpoints (daily/monthly emails via cron-job.org)
+CRON_SECRET = os.getenv('CRON_SECRET', '')
+
+# Redis + Session (optional — falls back to filesystem if REDIS_URL unset)
+REDIS_URL = os.getenv('REDIS_URL', '').strip()
+USE_REDIS = bool(REDIS_URL)
+
+SESSION_PERMANENT  = True
+SESSION_USE_SIGNER = False
+SESSION_KEY_PREFIX = os.getenv('SESSION_KEY_PREFIX', 'flask_session:')
+
+if USE_REDIS:
+    SESSION_TYPE = 'redis'
+    CACHE_TYPE = 'RedisCache'
+    CACHE_REDIS_URL = REDIS_URL
+else:
+    SESSION_TYPE = 'filesystem'
+    CACHE_TYPE = 'SimpleCache'
 
 # Public URLs (production)
 PUBLIC_BASE_URL = os.getenv('PUBLIC_BASE_URL', 'http://localhost:5000').rstrip('/')
