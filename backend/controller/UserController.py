@@ -12,8 +12,10 @@ def handle_login():
         user=Doctor.query.filter_by(email=email).first()
         if not user or not user.check_password(password):
             return jsonify({"message": "Invalid credentials"}), 401
-    session["user_id"] = user.id
-    session['role'] = user.role 
+    session.permanent = True
+    session['user_id'] = user.id
+    session['role'] = user.role
+    session.modified = True
     return jsonify({
             "success": True,
             "message": "Login successful",

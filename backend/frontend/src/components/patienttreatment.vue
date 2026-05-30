@@ -148,7 +148,7 @@ export default {
     downloadExportFile(filepath) {
       const filename = filepath.split(/[/\\]/).pop();
       const link = document.createElement("a");
-      link.href = `${apiOrigin}/exports/${filename}`;
+      link.href = apiOrigin ? `${apiOrigin}/exports/${filename}` : `/exports/${filename}`;
       link.download = filename;
       document.body.appendChild(link);
       link.click();

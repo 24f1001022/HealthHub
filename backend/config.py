@@ -55,6 +55,7 @@ if USE_REDIS:
     CACHE_REDIS_URL = REDIS_URL
 else:
     SESSION_TYPE = 'filesystem'
+    SESSION_FILE_DIR = os.path.join(os.environ.get('TMPDIR', '/tmp'), 'flask_session')
     CACHE_TYPE = 'SimpleCache'
 
 # Public URLs (production)

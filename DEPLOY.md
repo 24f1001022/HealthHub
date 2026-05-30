@@ -51,8 +51,10 @@ Or delete the Blueprint and create a new one from the repo.
 ## 2. Frontend on Vercel
 
 1. Import repo, **Root Directory:** `backend/frontend`
-2. Env: `VITE_API_BASE_URL` = `https://YOUR-API.onrender.com/api`
-3. Deploy → set `FRONTEND_URL` on Render to your Vercel URL → redeploy API
+2. **Delete** `VITE_API_BASE_URL` from Vercel env (if set). Production uses `/api` proxy in `vercel.json` so **login cookies work**.
+3. Deploy → set `FRONTEND_URL` on Render to `https://health-hub-gilt.vercel.app` (your real Vercel URL) → redeploy API
+
+**Admin login:** `admin@admin.com` / `admin`
 
 ---
 

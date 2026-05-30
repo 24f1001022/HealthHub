@@ -86,6 +86,7 @@ export default {
   },
  methods: {
     async handleLogin() {
+    try {
     const res = await this.$store.dispatch('auth/login', {
     email: this.email,
     password: this.password,
@@ -101,7 +102,11 @@ export default {
     this.error = true;
     this.message = res.message || "Login failed. Please try again.";
   }
-}
+    } catch (e) {
+      this.error = true;
+      this.message = "Cannot reach server. Wait 30s (Render cold start) and try again.";
+    }
+  }
   }
 };
 </script>

@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_cors import CORS
 from flask_mail import Mail
@@ -15,7 +16,12 @@ for origin in _frontend_raw.split(','):
     if origin:
         _cors_origins.add(origin)
 _cors_origins.update({'http://localhost:5173', 'http://127.0.0.1:5173'})
-CORS(app, supports_credentials=True, origins=_cors_origins)
+CORS(
+    app,
+    supports_credentials=True,
+    origins=list(_cors_origins),
+    origin_regex=r'https://.*\.vercel\.app',
+)
 mail = Mail(app)
 
 def _setup_cache_and_redis():
@@ -25,9 +31,13 @@ def _setup_cache_and_redis():
         return Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
 
     from redis import Redis
+    import ssl
     url = app.config['REDIS_URL']
+    kwargs = {}
+    if url.startswith('rediss://'):
+        kwargs['ssl_cert_reqs'] = ssl.CERT_NONE
     try:
-        client = Redis.from_url(url)
+        client = Redis.from_url(url, **kwargs)
         client.ping()
         app.redis = client
         return Cache(app, config={
@@ -38,6 +48,9 @@ def _setup_cache_and_redis():
         print(f'WARNING: Redis unavailable ({exc}); using filesystem sessions.')
         app.config['USE_REDIS'] = False
         app.config['SESSION_TYPE'] = 'filesystem'
+        app.config['SESSION_FILE_DIR'] = os.path.join(
+            os.environ.get('TMPDIR', '/tmp'), 'flask_session'
+        )
         app.redis = None
         return Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
 
@@ -49,8 +62,9 @@ Session(app)
 db.init_app(app)
 
 with app.app_context():
+    os.makedirs(app.config.get('SESSION_FILE_DIR', '/tmp/flask_session'), exist_ok=True)
     db.create_all()
-    admin = User.query.filter_by(role='admin').first()
+    admin = User.query.filter_by(email='admin@admin.com').first()
     if not admin:
         admin = User(
             email='admin@admin.com',

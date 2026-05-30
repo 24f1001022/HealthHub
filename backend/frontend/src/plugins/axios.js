@@ -6,14 +6,28 @@ function normalizeApiBase(url) {
   return base.endsWith('/api') ? base : `${base}/api`;
 }
 
-const apiBase = normalizeApiBase(import.meta.env.VITE_API_BASE_URL);
+function resolveApiBase() {
+  if (import.meta.env.DEV) {
+    return normalizeApiBase(import.meta.env.VITE_API_BASE_URL);
+  }
+  // Production on Vercel: same-origin /api proxy (vercel.json) — fixes login cookies
+  if (import.meta.env.VITE_USE_VERCEL_PROXY === 'false' && import.meta.env.VITE_API_BASE_URL) {
+    return normalizeApiBase(import.meta.env.VITE_API_BASE_URL);
+  }
+  return '/api';
+}
 
-/** Origin without /api — for static export file downloads */
-export const apiOrigin = apiBase.replace(/\/api\/?$/, '');
+const apiBase = resolveApiBase();
+const useVercelProxy = apiBase === '/api';
+
+/** Origin for export/static URLs */
+export const apiOrigin = useVercelProxy
+  ? ''
+  : apiBase.replace(/\/api\/?$/, '');
 
 const axiosInstance = axios.create({
   baseURL: apiBase,
-  timeout: 30000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },
