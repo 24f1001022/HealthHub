@@ -171,21 +171,30 @@ export default {
   },
   methods: {
   async handleSignup() {
-    const res = await this.$store.dispatch('auth/signup', {
-      email: this.email,
-      password: this.password,
-      confirm_password: this.confirm_password,
-      Address: this.Address,
-      Full_name: this.Full_name,
-      Age: this.Age,
-      PhoneNo: this.PhoneNo,
-      Gender: this.Gender
-    });
+    if (this.password !== this.confirm_password) {
+      alert('Passwords do not match');
+      return;
+    }
+    try {
+      const res = await this.$store.dispatch('auth/signup', {
+        email: this.email.trim(),
+        password: this.password,
+        confirm_password: this.confirm_password,
+        Address: this.Address,
+        Full_name: this.Full_name,
+        Age: Number(this.Age),
+        PhoneNo: this.PhoneNo,
+        Gender: this.Gender,
+      });
 
-    if (res.success) {
-      this.$router.push('/login');
-    } else {
-      alert(res.message || 'Signup failed');
+      if (res.success) {
+        alert('Account created! You can log in now.');
+        this.$router.push('/login');
+      } else {
+        alert(res.message || 'Signup failed');
+      }
+    } catch (e) {
+      alert('Cannot reach server. Wait 30s and try again.');
     }
   }
 }

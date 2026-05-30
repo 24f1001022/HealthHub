@@ -37,8 +37,18 @@ const store = createStore({
 },
 
         async signup(_, credentials) {
-          const res = await axiosInstance.post('/signup', credentials, { withCredentials: true });
-          return res.data;
+          try {
+            const res = await axiosInstance.post('/signup', credentials, { withCredentials: true });
+            return res.data;
+          } catch (error) {
+            const status = error.response?.status;
+            const message =
+              error.response?.data?.message ||
+              (status === 502
+                ? 'Server is waking up. Wait 30 seconds and try again.'
+                : 'Signup failed. Please try again.');
+            return { success: false, message };
+          }
         },
         async logout({ commit }) {
           await axiosInstance.post('/logout', {}, { withCredentials: true });

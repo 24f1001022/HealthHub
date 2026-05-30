@@ -36,6 +36,8 @@ def _setup_cache_and_redis():
     kwargs = {}
     if url.startswith('rediss://'):
         kwargs['ssl_cert_reqs'] = ssl.CERT_NONE
+    kwargs.setdefault('socket_connect_timeout', 10)
+    kwargs.setdefault('socket_timeout', 10)
     try:
         client = Redis.from_url(url, **kwargs)
         client.ping()
