@@ -1,14 +1,18 @@
 // src/plugins/axios.js
 import axios from 'axios';
 
+const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+/** Origin without /api — for static export file downloads */
+export const apiOrigin = apiBase.replace(/\/api\/?$/, '');
+
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000/api',  // Flask base URL
-  timeout: 10000,
+  baseURL: apiBase,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true
+  withCredentials: true,
 });
 
-// Optional: Add interceptors for auth or logging
 export default axiosInstance;

@@ -2,9 +2,10 @@
 from flask import Blueprint, request, jsonify,send_from_directory
 import os
 from redis import Redis
+import config
 
 export_bp= Blueprint("export_bp", __name__)
-r = Redis.from_url('redis://localhost:6379/0')
+r = Redis.from_url(config.REDIS_URL)
 
 
 @export_bp.route("/api/patient/<int:patient_id>/export-treatments", methods=["POST"])

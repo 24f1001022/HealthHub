@@ -28,14 +28,14 @@
           <div class="col-md-4 text-center">
             <img
               v-if="doctor.gender === 'Male'"
-              :src="'http://localhost:5000/static/images/doctor-character-illustration_863013-49092.jpg'"
+              :src="`${apiOrigin}/static/images/doctor-character-illustration_863013-49092.jpg`"
               alt="Doctor"
               class="rounded-circle border"
               style="width: 120px; height: 120px; object-fit: cover;"
             />
             <img
               v-else-if="doctor.gender === 'Female'"
-              src="http://localhost:5000/static/images/female_doc.jpg"
+              :src="`${apiOrigin}/static/images/female_doc.jpg`"
               alt="Female Doctor"
               class="rounded-circle border"
               style="width: 120px; height: 120px; object-fit: cover;"
@@ -61,12 +61,13 @@
 </template>
 
 <script>
-import axiosInstance from "../plugins/axios";
+import axiosInstance, { apiOrigin } from "../plugins/axios";
 
 export default {
   name: "DoctorDetails",
   data() {
     return {
+      apiOrigin,
       bgcolor: "lightblue",
       doctor: {
         name: "",

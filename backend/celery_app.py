@@ -1,11 +1,18 @@
+import os
 from celery import Celery
 from celery.schedules import crontab
+from dotenv import load_dotenv
+
+load_dotenv()
+
+_redis = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
 celery = Celery(
     'tasks',
-    broker='redis://localhost:6379/0',
-    backend='redis://localhost:6379/0'
+    broker=_redis,
+    backend=_redis,
 )
+celery.conf.imports = ('tasks',)
 celery.conf.timezone = 'Asia/Kolkata'
 celery.conf.beat_schedule = {
     'daily-appointment-reminder': {

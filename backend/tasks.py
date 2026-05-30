@@ -72,7 +72,8 @@ def export_patient_treatments_task(self, patient_id, email=None):
 
             if email:
                 try:
-                    file_url = f"http://localhost:5000/exports/{os.path.basename(filepath)}"
+                    base = config.PUBLIC_BASE_URL.rstrip('/')
+                    file_url = f"{base}/exports/{os.path.basename(filepath)}"
                     send_exportcsv_email(email, filepath=file_url)
                     print(f"Export email sent to {email}")
                 except Exception as e:

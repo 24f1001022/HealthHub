@@ -44,5 +44,12 @@ def handle_signup():
     db.session.add(user)
     db.session.commit()
     from tasks import send_welcome_email_task
-    send_welcome_email_task.delay(email)
+    from email_utils import send_welcome_email
+    try:
+        send_welcome_email_task.delay(email)
+    except Exception:
+        try:
+            send_welcome_email(email)
+        except Exception:
+            pass
     return jsonify({"success": True,'message': 'Account created Sucessfully'}), 200

@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import axiosInstance from "../plugins/axios";
+import axiosInstance, { apiOrigin } from "../plugins/axios";
 
 export default {
   name: "PatientTreatmentView",
@@ -171,11 +171,12 @@ export default {
               clearInterval(this.pollInterval);
               this.pollInterval = null;
               this.exporting = false;
-              const filename = data.filepath.split("/").pop();
+              const filename = data.filepath.split(/[/\\]/).pop();
               const link = document.createElement("a");
-              link.href = `http://localhost:5000/exports/${filename}`;
+              link.href = `${apiOrigin}/exports/${filename}`;
               link.download = filename;
               document.body.appendChild(link);
+              link.click();
               document.body.removeChild(link);
             } else if (data.status === "failed") {
               clearInterval(this.pollInterval);

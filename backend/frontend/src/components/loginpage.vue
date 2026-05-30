@@ -10,12 +10,13 @@
       >
         <div class="row g-0">
           <!-- Left Side: Doctor Illustration -->
-          <div class="col-md-6 d-flex justify-content-center align-items-center">
-            <img
-              src="C:\Users\safwan\Downloads\360_F_953096985_65KuXk2Grky6fJpfVnbEXqYRBTyg95zZ.png"
-              alt="Doctors illustration"
-              class="img-fluid w-100 h-100 border-0 rounded-4"
-            />
+          <div
+            class="col-md-6 d-flex flex-column justify-content-center align-items-center text-white p-5"
+            style="background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); min-height: 320px;"
+          >
+            <i class="bi bi-hospital fs-1 mb-3"></i>
+            <h4 class="fw-bold text-center">HealthHub</h4>
+            <p class="text-center opacity-75 mb-0">Hospital management made simple</p>
           </div>
 
           <!-- Right Side: Login Form -->
