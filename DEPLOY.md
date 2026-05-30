@@ -32,7 +32,11 @@ Or delete the Blueprint and create a new one from the repo.
 | `MAIL_PASSWORD` | Yes | [Gmail App Password](https://myaccount.google.com/apppasswords) |
 | `CRON_SECRET` | Auto | Copy from Render env (for scheduled emails) |
 
-4. Test: `https://YOUR-API.onrender.com/api/departments` → JSON response
+4. Test: `https://YOUR-API.onrender.com/health` → `{"status":"ok"}`
+
+**Logs show `/api/departments` every 5 seconds?** That was Render’s health check (normal). New deploys use `/health` instead.
+
+**Vercel env (required):** `VITE_API_BASE_URL` = `https://healthhub-api.onrender.com` (with or without `/api` — both work now)
 
 **Upstash Redis URL (correct):** In [Upstash console](https://console.upstash.com) → your database → copy **Redis URL** (looks like `rediss://default:xxxxx@xxxxx.upstash.io:6379`). Paste as `REDIS_URL` on Render.
 

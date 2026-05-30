@@ -1,8 +1,14 @@
-from app import app
-from flask import jsonify,Blueprint
-from models.models import Department,User
+from flask import jsonify, Blueprint
+from models.models import Department, User
 
 general_bp = Blueprint("general", __name__)
+
+
+@general_bp.route("/health", methods=["GET"])
+@general_bp.route("/api/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"}), 200
+
 
 @general_bp.route("/api/departments", methods=["GET"])
 def get_departments():

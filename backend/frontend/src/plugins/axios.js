@@ -1,7 +1,12 @@
 // src/plugins/axios.js
 import axios from 'axios';
 
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+function normalizeApiBase(url) {
+  const base = (url || 'http://localhost:5000').replace(/\/$/, '');
+  return base.endsWith('/api') ? base : `${base}/api`;
+}
+
+const apiBase = normalizeApiBase(import.meta.env.VITE_API_BASE_URL);
 
 /** Origin without /api — for static export file downloads */
 export const apiOrigin = apiBase.replace(/\/api\/?$/, '');

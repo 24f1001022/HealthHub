@@ -8,8 +8,13 @@ from models.models import db, User
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 
-_frontend = app.config.get('FRONTEND_URL', 'http://localhost:5173')
-_cors_origins = list({_frontend, 'http://localhost:5173', 'http://127.0.0.1:5173'})
+_frontend_raw = app.config.get('FRONTEND_URL', 'http://localhost:5173')
+_cors_origins = set()
+for origin in _frontend_raw.split(','):
+    origin = origin.strip().rstrip('/')
+    if origin:
+        _cors_origins.add(origin)
+_cors_origins.update({'http://localhost:5173', 'http://127.0.0.1:5173'})
 CORS(app, supports_credentials=True, origins=_cors_origins)
 mail = Mail(app)
 
