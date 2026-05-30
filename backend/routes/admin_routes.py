@@ -80,6 +80,8 @@ def add_doctor():
 
 @admin_bp.route('/api/admin/add_department', methods=['POST'])
 def add_department():
+    if session.get('role') != 'admin':
+        return jsonify({'message': 'Access denied'}), 403
     data = request.json
     dpt_name = data.get('dpt_name')
     description = data.get('description')

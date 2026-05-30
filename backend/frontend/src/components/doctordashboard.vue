@@ -79,7 +79,6 @@
 </template>
 
 <script>
-import axios from "../plugins/axios";
 import axiosInstance from "../plugins/axios";
 
 export default {
@@ -113,7 +112,7 @@ export default {
       this.$router.push({ path: `/doctor/availability/${doc_id}` });
     },
     gotopatienthistory(patient_id){
-      this.$router.push({ path: `doctor/patient/${patient_id}/history` })
+      this.$router.push({ path: `/doctor/patient/${patient_id}/history` });
     },
     updateHistorypage(id){
       this.$router.push({path:`/doctor/patient/${id}/treatment`})
@@ -121,7 +120,7 @@ export default {
     async markComplete(id) {
       if (!confirm("Mark this appointment as complete?")) return;
       try {
-        await axios.post(`/doctor/mark_complete/${id}`);
+        await axiosInstance.post(`/doctor/mark_complete/${id}`);
         alert("Appointment marked complete!");
         await this.fetchDashboard(); 
       } catch (err) {

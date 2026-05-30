@@ -86,7 +86,7 @@ export default {
     toggleSlot(slot) {
   if (slot.status === "booked") {
     // Redirect to cancel appointment page with slot ID
-    this.$router.push(`/doctor/cancel-appointment/${slot.id}`);
+    this.$router.push(`/doctor/cancel_appointment/${slot.id}`);
   } else {
     // Toggle between available and unavailable
     slot.status = slot.status === "available" ? "unavailable" : "available";

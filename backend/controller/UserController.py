@@ -5,8 +5,8 @@ def handle_login():
     data = request.json
     if not data or not data.get("email") or not data.get("password"):
         return jsonify({"message": "Missing email or password"}), 400
-    email = data["email"]
-    password = data["password"]
+    email = data['email'].strip().lower()
+    password = data['password']
     user = User.query.filter_by(email=email).first()
     if not user or not user.check_password(password):
         user=Doctor.query.filter_by(email=email).first()

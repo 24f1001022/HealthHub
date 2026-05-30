@@ -55,9 +55,13 @@ const store = createStore({
           commit('LOGOUT');
         },
         async loadUser({ commit }) {
-          const res = await axiosInstance.get('/me', { withCredentials: true });
-          commit('SET_USER', res.data.user);
-        }
+          try {
+            const res = await axiosInstance.get('/me', { withCredentials: true });
+            commit('SET_USER', res.data.user);
+          } catch {
+            commit('LOGOUT');
+          }
+        },
       }
     }
   }

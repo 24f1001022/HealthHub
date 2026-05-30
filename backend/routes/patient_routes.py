@@ -7,6 +7,20 @@ from datetime import date,datetime,timedelta
 patient_bp = Blueprint('patient', __name__)
 
 
+def _format_medicines(medicines):
+    if not medicines:
+        return ''
+    if isinstance(medicines, list):
+        parts = []
+        for m in medicines:
+            if isinstance(m, dict):
+                parts.append(m.get('name', str(m)))
+            else:
+                parts.append(str(m))
+        return ', '.join(parts)
+    return str(medicines)
+
+
 @patient_bp.route('/api/patient/<int:id>')
 def patient(id):
     patient_trt_data = PatientTreatment.query.filter_by(patient_id=id).first()
@@ -188,8 +202,10 @@ def book_slot():
     if not slot:
         return jsonify({'message': 'Slot not found'}), 404
 
-    if slot.status == 'booked':
+    if str(slot.status).lower() == 'booked':
         return jsonify({'message': 'This slot is already booked'}), 400
+    if str(slot.status).lower() != 'available':
+        return jsonify({'message': 'This slot is not available for booking'}), 400
     appointment = Appointment(
         doctor_id=slot.doctor_id,
         patient_id=patient_id,
@@ -271,7 +287,7 @@ def get_patient_history(patient_id):
                 "tests_done": t.test_done,
                 "diagnosis": t.diagnosis,
                 "prescription": t.prescription,
-                "medicines": ", ".join([m["name"] for m in t.medicines]) if t.medicines else "",
+                "medicines": _format_medicines(t.medicines),
             }
             for idx, t in enumerate(treatments)
         ],

@@ -57,7 +57,7 @@ class DoctorSlot(db.Model):
     date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
-    status = db.Column(db.String(20), default='Unavailable')  # 'available' / 'booked'
+    status = db.Column(db.String(20), default='unavailable')  # available / booked / unavailable
     appointment_id = db.Column(db.Integer, db.ForeignKey('appointment.id'), nullable=True)
 
     def serialize(self):

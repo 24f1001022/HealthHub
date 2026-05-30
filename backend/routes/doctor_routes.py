@@ -170,28 +170,39 @@ def update_availability(id):
     return jsonify({'success': True, 'message': 'Availability updated successfully'})
 
 
-@doctor_bp.route('/api/doctor/appointment-details/<int:slot_id>', methods=['GET'])
-def get_appointment_details(slot_id):
+@doctor_bp.route('/api/doctor/appointment-details/<int:lookup_id>', methods=['GET'])
+def get_appointment_details(lookup_id):
+    """lookup_id may be appointment id (dashboard) or doctor_slot id (availability page)."""
     if session.get('role') != 'doctor':
         return jsonify({'message': 'Access denied'}), 403
 
-    appointment = Appointment.query.filter_by(id=slot_id).first()
+    appointment = Appointment.query.get(lookup_id)
+    slot = DoctorSlot.query.filter_by(appointment_id=lookup_id).first()
+
     if not appointment:
-        return jsonify({'message': 'Appointment not found'}), 404
+        slot = DoctorSlot.query.get(lookup_id)
+        if not slot or not slot.appointment_id:
+            return jsonify({'message': 'Appointment not found'}), 404
+        appointment = Appointment.query.get(slot.appointment_id)
+        if not appointment:
+            return jsonify({'message': 'Appointment not found'}), 404
+    elif not slot:
+        slot = DoctorSlot.query.filter_by(appointment_id=appointment.id).first()
 
     patient = appointment.patient
-    slot = DoctorSlot.query.get(slot_id)
+    start_time = slot.start_time.strftime('%H:%M') if slot else appointment.slot.split(' - ')[0]
+    end_time = slot.end_time.strftime('%H:%M') if slot else (appointment.slot.split(' - ')[1] if ' - ' in appointment.slot else '')
 
     return jsonify({
         'id': appointment.id,
         'status': appointment.status,
         'date': appointment.date.strftime('%Y-%m-%d'),
-        'start_time': slot.start_time.strftime('%H:%M'),
-        'end_time': slot.end_time.strftime('%H:%M'),
+        'start_time': start_time,
+        'end_time': end_time,
         'patient_name': patient.full_name,
         'patient_email': patient.email,
         'patient_age': patient.age,
-        'patient_gender': patient.gender
+        'patient_gender': patient.gender,
     })
 
 @doctor_bp.route('/api/doctor/cancel-appointment/<int:appointment_id>', methods=['POST'])
@@ -205,9 +216,10 @@ def cancel_appointment_api(appointment_id):
 
     appointment.status = 'cancelled'
 
-    slot = DoctorSlot.query.get(appointment.slot)
+    slot = DoctorSlot.query.filter_by(appointment_id=appointment_id).first()
     if slot:
-        slot.status = 'unavailable'
+        slot.status = 'available'
+        slot.appointment_id = None
 
     db.session.commit()
     doctor_id = session.get('user_id')
@@ -224,7 +236,7 @@ def mark_complete(appointment_id):
     appointment=Appointment.query.filter_by(id=appointment_id).first()
     if not appointment:
         return jsonify({'message': 'Appointment not found'}), 404
-    appointment.status="compeleted"
+    appointment.status = 'completed'
     db.session.commit()
     doctor_id = session.get('user_id')
     cache_key = f"doctor_dashboard:{doctor_id}"
