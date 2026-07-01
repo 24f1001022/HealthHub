@@ -8,13 +8,13 @@
         class="card shadow-lg border-0 rounded-4 overflow-hidden"
         style="max-width: 900px; width: 100%"
       >
-        <div class="row g-0">
+        <div class="row g-0 h-100">
           <!-- Left Side: Doctor Illustration -->
           <div
-            class="col-md-6 d-flex align-items-end justify-content-center login-hero"
+            class="col-md-6 login-hero"
           >
             <img
-              :src="loginDoctorImg"
+              src="../assets/Login_page_img.jpg"
               alt="HealthHub doctor"
               class="login-doctor-img"
             />
@@ -74,13 +74,11 @@
 </template>
 
 <script>
-import loginDoctorImg from "../assets/login-doctor.png";
 
 export default {
   name: "LoginPage",
   data() {
     return {
-      loginDoctorImg,
       email: "",
       password: "",
       message: "",
@@ -117,16 +115,18 @@ export default {
 
 <style scoped>
 .login-hero {
-  background: linear-gradient(160deg, #e8f4ff 0%, #cfe8ff 45%, #b8daff 100%);
-  min-height: 420px;
-  padding: 1.5rem 1rem 0;
+  background-color: #ffffff;
+  min-height: 100%;
+  height: 100%;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .login-doctor-img {
-  max-width: 100%;
-  max-height: 380px;
+  max-height: 90%;
   object-fit: contain;
-  filter: drop-shadow(0 12px 24px rgba(13, 110, 253, 0.15));
 }
 
 body {
