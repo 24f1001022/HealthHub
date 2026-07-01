@@ -143,7 +143,9 @@ if config.USE_CELERY:
 
     @celery.task
     def send_welcome_email_task(email):
-        send_welcome_email(email)
+        from app import app
+        with app.app_context():
+            send_welcome_email(email)
 
     @celery.task(name='tasks.export_patient_treatments_task', bind=True)
     def export_patient_treatments_task(self, patient_id, email=None):

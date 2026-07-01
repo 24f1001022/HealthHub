@@ -11,12 +11,13 @@
         <div class="row g-0">
           <!-- Left Side: Doctor Illustration -->
           <div
-            class="col-md-6 d-flex flex-column justify-content-center align-items-center text-white p-5"
-            style="background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); min-height: 320px;"
+            class="col-md-6 d-flex align-items-end justify-content-center login-hero"
           >
-            <i class="bi bi-hospital fs-1 mb-3"></i>
-            <h4 class="fw-bold text-center">HealthHub</h4>
-            <p class="text-center opacity-75 mb-0">Hospital management made simple</p>
+            <img
+              :src="loginDoctorImg"
+              alt="HealthHub doctor"
+              class="login-doctor-img"
+            />
           </div>
 
           <!-- Right Side: Login Form -->
@@ -73,10 +74,13 @@
 </template>
 
 <script>
+import loginDoctorImg from "../assets/login-doctor.png";
+
 export default {
   name: "LoginPage",
   data() {
     return {
+      loginDoctorImg,
       email: "",
       password: "",
       message: "",
@@ -111,7 +115,20 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.login-hero {
+  background: linear-gradient(160deg, #e8f4ff 0%, #cfe8ff 45%, #b8daff 100%);
+  min-height: 420px;
+  padding: 1.5rem 1rem 0;
+}
+
+.login-doctor-img {
+  max-width: 100%;
+  max-height: 380px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 24px rgba(13, 110, 253, 0.15));
+}
+
 body {
   font-family: "Segoe UI", sans-serif;
 }

@@ -24,6 +24,9 @@ CORS(
 )
 mail = Mail(app)
 
+if not app.config.get('MAIL_USERNAME') or not app.config.get('MAIL_PASSWORD'):
+    print('WARNING: MAIL_USERNAME / MAIL_PASSWORD not set — welcome & notification emails disabled.')
+
 def _setup_cache_and_redis():
     """Use Redis only when REDIS_URL is a valid redis:// or rediss:// URL."""
     if not app.config.get('USE_REDIS'):

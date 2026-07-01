@@ -13,12 +13,20 @@ if _db_url.startswith('postgres://'):
 SQLALCHEMY_DATABASE_URI = _db_url
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-# Flask-Mail
-MAIL_SERVER   = os.getenv('MAIL_SERVER',   'smtp.gmail.com')
-MAIL_PORT     = int(os.getenv('MAIL_PORT', '587'))
-MAIL_USE_TLS  = os.getenv('MAIL_USE_TLS',  'True').lower() == 'true'
-MAIL_USERNAME = os.getenv('MAIL_USERNAME')
-MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+# Flask-Mail (Gmail: use App Password — spaces are stripped automatically)
+def _clean_mail(value):
+    if not value:
+        return None
+    return value.strip().strip('"').strip("'").replace(' ', '')
+
+
+MAIL_SERVER        = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+MAIL_PORT          = int(os.getenv('MAIL_PORT', '587'))
+MAIL_USE_TLS       = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
+MAIL_USERNAME      = os.getenv('MAIL_USERNAME', '').strip().strip('"').strip("'") or None
+MAIL_PASSWORD      = _clean_mail(os.getenv('MAIL_PASSWORD'))
+MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER') or MAIL_USERNAME
+MAIL_SUPPRESS_SEND = os.getenv('MAIL_SUPPRESS_SEND', 'False').lower() == 'true'
 
 # Celery (disabled on Render free — no background workers)
 USE_CELERY = os.getenv('USE_CELERY', 'false').lower() == 'true'

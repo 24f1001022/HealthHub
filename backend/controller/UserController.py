@@ -26,25 +26,22 @@ def handle_login():
             }
         }), 200
 
-def _send_welcome_email_background(email):
-    """Do not block signup HTTP response (avoids Vercel 502 on slow SMTP)."""
-    import threading
-    from app import app
+def _send_welcome_email_after_signup(email):
+    """Send welcome email before returning (daemon threads die on Render/Gunicorn)."""
+    import config
+    if not config.MAIL_USERNAME or not config.MAIL_PASSWORD:
+        print(f'WARNING: Welcome email skipped for {email} — set MAIL_USERNAME and MAIL_PASSWORD on Render')
+        return
 
-    def _run():
-        with app.app_context():
+    try:
+        if config.USE_CELERY:
+            from tasks import send_welcome_email_task
+            send_welcome_email_task.delay(email)
+        else:
             from email_utils import send_welcome_email
-            import config
-            try:
-                if config.USE_CELERY:
-                    from tasks import send_welcome_email_task
-                    send_welcome_email_task.delay(email)
-                else:
-                    send_welcome_email(email)
-            except Exception as exc:
-                print(f'Welcome email failed for {email}: {exc}')
-
-    threading.Thread(target=_run, daemon=True).start()
+            send_welcome_email(email)
+    except Exception as exc:
+        print(f'Welcome email failed for {email}: {exc}')
 
 
 def handle_signup():
@@ -86,5 +83,5 @@ def handle_signup():
     db.session.add(user)
     db.session.commit()
 
-    _send_welcome_email_background(email)
+    _send_welcome_email_after_signup(email)
     return jsonify({'success': True, 'message': 'Account created successfully'}), 200
